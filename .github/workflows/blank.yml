@@ -1,0 +1,24 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Locate project (unzip if needed)
+        run: |
+          if [ -f package.json ] && [ -f capacitor.config.json ]; then
+            P=.
+          else
+            mkdir -p _unz
+            for z in *.zip; do [ -f "$z" ] && unzip -o -q "$z" -d _unz; done
+            CFGF=$(find _unz -name capacitor.config.json -not -path "*/node_modules/*" | head -1)
+            [ -n "$CFGF" ] || { echo "Project not found: upload the zip"; exit 1; }
+            P=$(dirname "$CFGF")
+          fi
